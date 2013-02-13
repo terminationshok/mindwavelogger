@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.graphics.Color;
 
 
 public class MainActivity extends Activity {
@@ -35,6 +36,9 @@ public class MainActivity extends Activity {
 	TextView tv;
 	Button button;
 	TGRawMulti tgRaw;
+	
+	double att = 0;
+	double med = 0;
 	
 	
     Calendar t = Calendar.getInstance();
@@ -101,18 +105,22 @@ public class MainActivity extends Activity {
             case TGDevice.MSG_RAW_DATA:	  
             		//raw1 = msg.arg1;
             		//tv.append("Got raw: " + msg.arg1 + "\n");
+    
             	break;
             case TGDevice.MSG_HEART_RATE:
         		tv.append("Heart rate: " + msg.arg1 + "\n");
                 break;
             case TGDevice.MSG_ATTENTION:
-            		//att = msg.arg1;
-            		tv.append("Attention: " + msg.arg1 + "\n");
+            		att = msg.arg1 * 2.55;
+            		tv.append("Attention: " + msg.arg1 + "\n");            		
+            		//tv.append("Attention Color: " + att + "\n");
             		t = Calendar.getInstance();
             		writeExtFile("Attention: " + msg.arg1 + " @" + t.get(Calendar.HOUR) + ":" + t.get(Calendar.MINUTE) + ":" + t.get(Calendar.SECOND) + t.get(Calendar.AM_PM) + " " + "\n");
             		//Log.v("HelloA", "Attention: " + att + "\n");
+            		//tv.setBackgroundColor(Color.argb(255, (int)att, 0, 0));
             	break;
             case TGDevice.MSG_MEDITATION:
+            	med = msg.arg1 * 2.55;
             	tv.append("Meditation: " + msg.arg1 + "\n");
         		t = Calendar.getInstance();
         		writeExtFile("Meditation: " + msg.arg1 + " @" + t.get(Calendar.HOUR) + ":" + t.get(Calendar.MINUTE) + ":" + t.get(Calendar.SECOND) + t.get(Calendar.AM_PM) + " " + "\n");
@@ -140,11 +148,11 @@ public class MainActivity extends Activity {
             	tgRaw.ch7 + ", " + 
             	tgRaw.ch8 + ", " + 
             			"\n");
-            	break;
             default:
             	break;
         }
-        }
+        		tv.setBackgroundColor(Color.argb(255, (int)att, 0, (int)med));
+        }  
     };
 
     public void doStuff(View view) {
