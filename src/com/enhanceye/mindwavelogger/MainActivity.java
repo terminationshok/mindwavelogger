@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
+
+import android.R.color;
 import android.text.format.DateFormat;
 import android.os.Bundle;
 import android.app.Activity;
@@ -26,6 +28,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Color;
+import hypermedia.net.*;
+import com.heroicrobot.dropbit.registry.*;
+import com.heroicrobot.dropbit.devices.pixelpusher.Pixel;
+import com.heroicrobot.dropbit.devices.pixelpusher.Strip;
+import java.util.*;
 
 
 public class MainActivity extends Activity {
@@ -43,6 +50,11 @@ public class MainActivity extends Activity {
 	
     Calendar t = Calendar.getInstance();
     int buttonState = 0;
+    
+    DeviceRegistry registry;
+    TestObserver testObserver;
+    int ledsW = 48 * 5;
+    int ledsH = 8;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +71,10 @@ public class MainActivity extends Activity {
         tv.append("Android version: " + android.os.Build.VERSION.RELEASE + "\n" );
         button = (Button)findViewById(R.id.button1);
         tgRaw = new TGRawMulti();
+        
+        registry = new DeviceRegistry();
+        testObserver = new TestObserver();
+        registry.addObserver(testObserver);
     }
 
 
@@ -152,6 +168,20 @@ public class MainActivity extends Activity {
             	break;
         }
         		tv.setBackgroundColor(Color.argb(255, (int)att, 0, (int)med));
+        		
+        		  if (testObserver.hasStrips) {
+        			    registry.startPushing();
+        			    List<Strip> strips = registry.getStrips();   
+
+        			    for (int y = 0; y < ledsH; y++) {
+        			      for (int x = 0; x < ledsW; x++) {
+        			    	  int c = ((int)att << 16) | (0 << 8) | (int)med;
+        			        if (y < strips.size()) {
+        			          strips.get(y).setPixel(c, x);
+        			        }
+        			      }
+        			    }
+        			  }
         }  
     };
 
@@ -172,6 +202,7 @@ public class MainActivity extends Activity {
         		tgDevice.close();
         	t = Calendar.getInstance();
         	writeExtFile("Logging session stopped: " + DateFormat.getTimeFormat(this).format(t.getTime()) + " " + DateFormat.getDateFormat(this).format(t.getTime()) + "\n");
+        	registry.stopPushing();
         	button.setText("Connect");
         	buttonState = 0;
     	}
@@ -208,5 +239,17 @@ public class MainActivity extends Activity {
     	}
     }
     
+
     
 }
+
+class TestObserver implements Observer {
+	  public boolean hasStrips = false;
+	  public void update(Observable registry, Object updatedDevice) {
+		  java.lang.System.out.println("Registry changed!");
+	    if (updatedDevice != null) {
+	    	java.lang.System.out.println("Device change: " + updatedDevice);
+	    }
+	    this.hasStrips = true;
+	  }
+	}
